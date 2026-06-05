@@ -172,6 +172,70 @@ satellite/NDVI crop monitoring, AI off-type detection from photos.
 
 ---
 
+## 6. Competitive Analysis — What the Market Has That We Don't
+
+Researched leading farm/agri inspection apps (FarmQA, Farmonaut, Agrio, DTN Scout, Cropin,
+Pure Harvest, Fulcrum) and general inspection platforms (SafetyCulture/iAuditor, GoAudits,
+FastField, InspectAll). Below: standard market features we're missing, ranked by value for
+Kosco's specific context (field seed inspection, low-literacy staff, no signal, anti-fraud).
+
+### 🔴 Must-add — these are table-stakes we lack
+1. **Geofence / on-site verification** — verify the captured GPS actually falls *inside the
+   registered field boundary*. Today we capture GPS but don't check it's the right place. This
+   is the single biggest trust/anti-fraud feature — proves the inspector was physically there.
+2. **Official Field Inspection Report (FIR) as PDF** — Indian seed cert requires an FIR
+   "in triplicate" per inspection. Auto-generate a branded PDF, store it, email it. We have
+   zero PDF output today.
+3. **E-signatures** — inspector + farmer sign the FIR on the phone. Legally meaningful for a
+   certification document. Standard in every inspection app; we have none.
+4. **Crop-specific standards engine + auto scoring** — encode per-crop rules (isolation
+   distance: ~100m self-pollinated / ~500m cross-pollinated; off-type % threshold; required
+   inspection stages) and **auto-compute pass / conditional / fail** instead of manual. Today
+   the verdict is a manual button.
+5. **Configurable inspections per crop (2–4)** — Indian standards require 2–4 inspections at
+   vegetative / flowering / pre-harvest stages depending on crop. We hardcoded 2 + additional.
+   Make count & stages part of crop config.
+6. **Voice notes** — let inspectors *dictate* observations instead of typing. Directly serves
+   our "usable by less-educated field staff" mandate — a real differentiator for rural India.
+
+### 🟡 High-value — market-standard, strong ROI
+7. **Configurable form builder / inspection templates** — different crops need different
+   checklists. Market apps let you build/clone templates per crop with **conditional fields**
+   (show/hide based on answers). Ours is one hardcoded form.
+8. **CAPA / corrective-action workflow** — when something fails, create a tracked action:
+   assign → due date → resolve → sign-off → time-stamped record. We only have a "follow-up?"
+   checkbox with no tracking. This also drives the complaint-based additional inspections.
+9. **Map annotation** — draw *where* in the field the problem is (rogue patch, disease spot)
+   and its extent, on the field map.
+10. **Push notifications** — assigned inspections, overdue tasks, rejections. (PWA push +
+    later WhatsApp/SMS.)
+11. **Branded PDF reports auto-emailed to stakeholders** — managers/owner get the report
+    without logging in.
+12. **Real-time analytics dashboard** — compliance/pass rates, overdue, inspector KPIs,
+    rejections by region. (Overlaps our executive report.)
+13. **Activity feed / "my team today"** — manager sees live field activity across inspectors.
+
+### 🟢 Advanced / future differentiators
+14. **Satellite / NDVI crop-health imagery** (Farmonaut, EOS) — overlay remote crop health with
+    ground observations to target inspections. Phase 5.
+15. **AI from photos** — pest/disease ID and **off-type detection** from crop photos. Emerging
+    standard; strong fit since we already capture photos. Phase 5.
+16. **QR / barcode** — tie each inspection/lot/seed bag to a scannable code for traceability.
+    Becomes essential in the Phase 3 seed-lifecycle (lot tracking, tagging).
+17. **Billing / fee management** — per-acre inspection fees and per-sample test fees, auto-charged
+    to accounts (Pure Harvest, Cropin do this) — if Kosco bills growers or tracks SSCA fees.
+18. **IoT / sensor integration** — soil moisture, weather stations — long-term.
+
+### Domain corrections to bake in (India seed cert specifics)
+- Inspections are **2–4 per crop** (not fixed 2) at vegetative / flowering / pre-harvest stages.
+- **Isolation distance is crop-specific** (~100m self-pollinated, ~500m cross-pollinated) — store
+  the standard per crop and validate against the captured distance.
+- **Off-type/rogue thresholds are crop-specific** — auto-flag rejection when exceeded.
+- A plot failing standards is **"liable for rejection"** — model this rejection state explicitly.
+- FIR is an **official document** — needs the right fields, signatures, and a print/PDF format.
+
+---
+
 ## 5. Known Issues / Tech Debt
 - Supabase default SMTP unreliable → **must** add custom SMTP before real onboarding.
 - Offline inspection drops photos (`photos: []` in offline branch).
