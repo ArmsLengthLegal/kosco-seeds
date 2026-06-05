@@ -14,7 +14,8 @@
       "PowerShell(node --version 2>&1)",
       "PowerShell(npm --version 2>&1)",
       "PowerShell(winget --version 2>&1)",
-      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); node --version; npm --version)"
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); node --version; npm --version)",
+      "PowerShell(Start-Sleep -Seconds 5; Get-Content \"E:\\\\Kosco Seeds\\\\.devserver.log\" -ErrorAction SilentlyContinue | Select-Object -Last 10; Write-Host \"---TESTING---\"; try { \\(Invoke-WebRequest \"http://localhost:3000/login\" -UseBasicParsing -TimeoutSec 10\\).StatusCode } catch { $_.Exception.Message })"
     ]
   }
 }

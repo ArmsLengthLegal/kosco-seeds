@@ -103,6 +103,13 @@ export default function LoginPage() {
               <a href="/forgot-password" className="block py-1 text-center text-base font-medium text-brand-700 hover:underline">
                 Forgot password?
               </a>
+
+              <div className="border-t pt-4 text-center">
+                <p className="text-base text-muted-foreground">
+                  New here?{' '}
+                  <a href="/signup" className="font-semibold text-brand-700 hover:underline">Create account</a>
+                </p>
+              </div>
             </form>
           </div>
         </div>
