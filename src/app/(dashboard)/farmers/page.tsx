@@ -1,11 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Users, Phone, MapPin, Plus } from 'lucide-react'
+import { Users, Phone, MapPin, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 
 const TAG_COLORS: Record<string, string> = {
-  'production-agreement': 'bg-green-100 text-green-800',
+  'production-agreement': 'bg-brand-50 text-brand-700',
   'kharif-2025': 'bg-orange-100 text-orange-800',
   'rabi-2025-26': 'bg-blue-100 text-blue-800',
   vip: 'bg-purple-100 text-purple-800',
@@ -35,66 +34,75 @@ export default async function FarmersPage({
   const { data: farmers } = await query
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 pb-24">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Farmers</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Farmers</h1>
         <Link
           href="/farmers/new"
-          className="inline-flex items-center gap-1.5 rounded-md bg-green-800 px-3 py-2 text-sm font-medium text-white hover:bg-green-900"
+          className="hidden items-center gap-2 rounded-xl bg-brand-700 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-brand-700/25 transition hover:bg-brand-800 active:scale-[0.98] sm:flex"
         >
-          <Plus className="h-4 w-4" /> Add Farmer
+          <Plus className="h-5 w-5" /> Add Farmer
         </Link>
       </div>
 
-      <form method="get" className="flex gap-2">
+      {/* Search */}
+      <form method="get" className="relative">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-gray-400" />
         <input
           name="q"
           defaultValue={params.q}
-          placeholder="Search by name, phone, code…"
-          className="h-10 w-full max-w-sm rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder="Search name, phone or code…"
+          className="h-14 w-full rounded-2xl border-2 border-input bg-white pl-12 pr-4 text-lg outline-none transition focus:border-brand-700 focus:ring-4 focus:ring-brand-700/10"
         />
-        <button type="submit" className="inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent">
-          Search
-        </button>
       </form>
 
-      <p className="text-sm text-gray-500">{farmers?.length ?? 0} farmers</p>
+      <p className="text-base font-medium text-muted-foreground">{farmers?.length ?? 0} farmers</p>
 
       {!farmers?.length && (
-        <Card><CardContent className="py-12 text-center">
-          <Users className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-          <p className="text-gray-500">No farmers found.</p>
-          <Link href="/farmers/new" className="mt-4 inline-flex items-center rounded-md bg-green-800 px-3 py-2 text-sm font-medium text-white hover:bg-green-900">
-            Add First Farmer
+        <Card><CardContent className="py-16 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+            <Users className="h-8 w-8 text-gray-400" />
+          </div>
+          <p className="text-lg text-gray-600">No farmers yet.</p>
+          <Link href="/farmers/new" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand-700 px-6 py-3 text-base font-semibold text-white hover:bg-brand-800">
+            <Plus className="h-5 w-5" /> Add First Farmer
           </Link>
         </CardContent></Card>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {farmers?.map((farmer) => (
           <Link key={farmer.id} href={`/farmers/${farmer.id}`}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="pt-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{farmer.full_name}</p>
-                    <p className="text-xs text-gray-400">{farmer.farmer_code}</p>
+            <Card className="border-2 transition hover:border-brand-200 hover:shadow-lg active:scale-[0.99]">
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xl font-bold text-brand-700">
+                    {farmer.full_name.charAt(0).toUpperCase()}
                   </div>
-                  <Badge
-                    variant={farmer.agreement_status === 'active' ? 'default' : 'secondary'}
-                    className={farmer.agreement_status === 'active' ? 'bg-green-100 text-green-800 text-xs' : 'text-xs'}
-                  >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xl font-bold text-gray-900">{farmer.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{farmer.farmer_code}</p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${
+                    farmer.agreement_status === 'active' ? 'bg-brand-50 text-brand-700' : 'bg-gray-100 text-gray-600'
+                  }`}>
                     {farmer.agreement_status}
-                  </Badge>
+                  </span>
                 </div>
-                <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{farmer.primary_phone}</span>
-                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{farmer.village}</span>
+
+                <div className="mt-4 space-y-1.5">
+                  <p className="flex items-center gap-2 text-base text-gray-700">
+                    <Phone className="h-5 w-5 text-gray-400" /> {farmer.primary_phone}
+                  </p>
+                  <p className="flex items-center gap-2 text-base text-gray-700">
+                    <MapPin className="h-5 w-5 text-gray-400" /> {farmer.village}, {farmer.district}
+                  </p>
                 </div>
+
                 {Array.isArray(farmer.tags) && farmer.tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {(farmer.tags as string[]).slice(0, 3).map(tag => (
-                      <span key={tag} className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${TAG_COLORS[tag] ?? 'bg-gray-100 text-gray-700'}`}>
+                      <span key={tag} className={`rounded-full px-2.5 py-1 text-sm font-medium ${TAG_COLORS[tag] ?? 'bg-gray-100 text-gray-700'}`}>
                         {tag}
                       </span>
                     ))}
@@ -105,6 +113,15 @@ export default async function FarmersPage({
           </Link>
         ))}
       </div>
+
+      {/* Mobile FAB */}
+      <Link
+        href="/farmers/new"
+        className="fixed bottom-6 right-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-xl shadow-brand-700/40 transition hover:bg-brand-800 active:scale-95 sm:hidden"
+        aria-label="Add Farmer"
+      >
+        <Plus className="h-8 w-8" />
+      </Link>
     </div>
   )
 }

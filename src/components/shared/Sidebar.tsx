@@ -38,46 +38,52 @@ export default function Sidebar({ role, userName }: SidebarProps) {
   const visibleItems = navItems.filter(item => item.roles.includes(role))
 
   return (
-    <aside className="hidden lg:flex w-60 flex-col border-r bg-white">
-      <div className="flex h-14 items-center gap-2 border-b px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-800">
-          <Sprout className="h-4 w-4 text-white" />
+    <aside className="hidden h-full w-64 flex-col border-r bg-white lg:flex">
+      <div className="flex h-16 items-center gap-3 border-b px-5">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-700 shadow-md shadow-brand-700/25">
+          <Sprout className="h-6 w-6 text-white" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">Kosco Seeds</p>
-          <p className="text-xs text-gray-400 capitalize">{role.replace('_', ' ')}</p>
+          <p className="text-lg font-bold leading-tight text-gray-900">Kosco Seeds</p>
+          <p className="text-sm capitalize text-muted-foreground">{role.replace('_', ' ')}</p>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {visibleItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-              pathname.startsWith(href) && href !== '/dashboard'
-                ? 'bg-green-50 text-green-800'
-                : pathname === href
-                ? 'bg-green-50 text-green-800'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </Link>
-        ))}
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        {visibleItems.map(({ href, label, icon: Icon }) => {
+          const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href)
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium transition-colors',
+                active
+                  ? 'bg-brand-700 text-white shadow-md shadow-brand-700/20'
+                  : 'text-gray-600 hover:bg-brand-50 hover:text-brand-800'
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              {label}
+            </Link>
+          )
+        })}
       </nav>
 
       <div className="border-t p-3">
-        <div className="mb-2 px-2">
-          <p className="text-xs font-medium text-gray-900 truncate">{userName}</p>
-        </div>
+        {userName && (
+          <div className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-base font-bold text-brand-700">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <p className="truncate text-base font-medium text-gray-900">{userName}</p>
+          </div>
+        )}
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-red-600 transition-colors hover:bg-red-50"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5" />
           Sign Out
         </button>
       </div>

@@ -1,13 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Users, MapPin, ClipboardCheck, TrendingUp, AlertTriangle, Clock } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Users, MapPin, ClipboardCheck, TrendingUp, Clock, Navigation, Plus, FileText, Sprout } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
-
-const btnBase = 'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 px-3 py-1.5'
-const btnPrimary = cn(btnBase, 'bg-green-800 text-white hover:bg-green-900')
-const btnOutline = cn(btnBase, 'border border-input bg-background hover:bg-accent hover:text-accent-foreground')
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -19,6 +13,7 @@ export default async function DashboardPage() {
     .single()
 
   const role = profile?.role ?? 'viewer'
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'there'
   const isInspector = role === 'inspector'
 
   const [farmersRes, assignmentsRes] = await Promise.all([
@@ -26,13 +21,13 @@ export default async function DashboardPage() {
     supabase.from('inspection_assignments').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ])
 
+  // ---------------- INSPECTOR VIEW ----------------
   if (isInspector) {
     const { data: myTasks } = await supabase
       .from('inspection_assignments')
       .select(`
         id, scheduled_date, status, notes_for_inspector, inspection_number, inspection_type,
         production_agreements(
-          crop_year, crop_season,
           farmers(full_name, village, primary_phone),
           farmer_fields(field_name, centroid_lat, centroid_lng),
           crop_varieties(crop_name, variety_code)
@@ -44,62 +39,82 @@ export default async function DashboardPage() {
       .limit(20)
 
     return (
-      <div className="space-y-4 max-w-2xl mx-auto">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">
-            Good morning, {profile?.full_name?.split(' ')[0]} 👋
-          </h1>
-          <Badge variant="outline" className="text-green-700 border-green-700">
-            {myTasks?.length ?? 0} tasks today
-          </Badge>
+      <div className="mx-auto max-w-2xl space-y-5 pb-24">
+        <div>
+          <p className="text-lg text-muted-foreground">Namaste 🙏</p>
+          <h1 className="text-3xl font-bold text-gray-900">{firstName}</h1>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-2xl bg-brand-700 p-5 text-white shadow-lg shadow-brand-700/25">
+          <ClipboardCheck className="h-10 w-10 shrink-0" />
+          <div>
+            <p className="text-3xl font-bold leading-none">{myTasks?.length ?? 0}</p>
+            <p className="text-lg">Inspections to do today</p>
+          </div>
         </div>
 
         {myTasks?.length === 0 && (
-          <Card><CardContent className="py-8 text-center text-gray-500">
-            <ClipboardCheck className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-            <p>No pending inspections assigned to you.</p>
+          <Card><CardContent className="py-12 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-50">
+              <Sprout className="h-8 w-8 text-brand-600" />
+            </div>
+            <p className="text-lg text-gray-600">No inspections assigned right now.</p>
+            <p className="text-base text-muted-foreground">Enjoy your day!</p>
           </CardContent></Card>
         )}
 
         {myTasks?.map((task) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const agr = task.production_agreements as any
-          const farmer = agr?.farmers as Record<string, unknown>
-          const field = agr?.farmer_fields as Record<string, unknown>
-          const crop = agr?.crop_varieties as Record<string, unknown>
+          const farmer = agr?.farmers
+          const field = agr?.farmer_fields
+          const crop = agr?.crop_varieties
           return (
-            <Card key={task.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{String(farmer?.full_name ?? '')}</p>
-                    <p className="text-sm text-gray-500">{String(farmer?.village ?? '')} · {String(crop?.crop_name ?? '')} {String(crop?.variety_code ?? '')}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Inspection #{task.inspection_number}
-                      {task.inspection_type === 'additional' && (
-                        <Badge className="ml-2 text-xs bg-amber-100 text-amber-800">Additional</Badge>
-                      )}
+            <Card key={task.id} className="overflow-hidden border-2">
+              <CardContent className="p-0">
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xl font-bold text-gray-900">{farmer?.full_name}</p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-lg text-muted-foreground">
+                        <MapPin className="h-5 w-5 shrink-0" /> {farmer?.village}
+                      </p>
+                      <p className="mt-1 text-base text-gray-700">
+                        🌾 {crop?.crop_name} {crop?.variety_code}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <span className={`inline-block rounded-full px-3 py-1 text-base font-semibold ${
+                        task.inspection_type === 'additional'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-brand-50 text-brand-700'
+                      }`}>
+                        {task.inspection_type === 'additional' ? 'Extra' : `Visit ${task.inspection_number}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {task.notes_for_inspector && (
+                    <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-base text-amber-900">
+                      📝 {task.notes_for_inspector}
                     </p>
-                    {task.notes_for_inspector && (
-                      <p className="text-xs text-amber-700 mt-1 bg-amber-50 rounded px-2 py-1">{task.notes_for_inspector}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant={task.status === 'in-progress' ? 'default' : 'secondary'}>{task.status}</Badge>
-                    <p className="text-xs text-gray-400">{task.scheduled_date}</p>
-                  </div>
+                  )}
                 </div>
-                <div className="mt-3 flex gap-2">
+
+                <div className="grid grid-cols-2 gap-px bg-border">
                   <a
                     href={`https://maps.google.com/?q=${field?.centroid_lat},${field?.centroid_lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={cn(btnOutline, 'flex-1 gap-1')}
+                    className="flex h-16 items-center justify-center gap-2 bg-white text-lg font-semibold text-gray-700 transition hover:bg-gray-50 active:bg-gray-100"
                   >
-                    <MapPin className="h-3 w-3" /> Navigate
+                    <Navigation className="h-6 w-6 text-brand-600" /> Navigate
                   </a>
-                  <Link href={`/inspections/${task.id}`} className={cn(btnPrimary, 'flex-1')}>
-                    Start Inspection
+                  <Link
+                    href={`/inspections/${task.id}`}
+                    className="flex h-16 items-center justify-center gap-2 bg-brand-700 text-lg font-semibold text-white transition hover:bg-brand-800 active:bg-brand-900"
+                  >
+                    <ClipboardCheck className="h-6 w-6" /> Start
                   </Link>
                 </div>
               </CardContent>
@@ -110,62 +125,63 @@ export default async function DashboardPage() {
     )
   }
 
+  // ---------------- ADMIN / MANAGER VIEW ----------------
+  const stats = [
+    { title: 'Farmers', icon: Users, value: farmersRes.count ?? 0, sub: 'Under agreement', bg: 'bg-brand-50', fg: 'text-brand-700' },
+    { title: 'Pending', icon: Clock, value: assignmentsRes.count ?? 0, sub: 'Inspections', bg: 'bg-amber-50', fg: 'text-amber-600' },
+    { title: 'Completed', icon: ClipboardCheck, value: '—', sub: 'This season', bg: 'bg-green-50', fg: 'text-green-700' },
+    { title: 'Exp. Yield', icon: TrendingUp, value: '—', sub: 'Quintals', bg: 'bg-blue-50', fg: 'text-blue-700' },
+  ]
+
+  const quickActions = [
+    { label: 'Add Farmer', href: '/farmers/new', icon: Plus, primary: true },
+    { label: 'All Farmers', href: '/farmers', icon: Users },
+    { label: 'Assign Inspection', href: '/inspections/assign', icon: ClipboardCheck },
+    { label: 'Reports', href: '/reports/executive', icon: FileText },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <div className="flex gap-2">
-          <Link href="/farmers/new" className={btnPrimary}>+ Add Farmer</Link>
-          <Link href="/inspections/assign" className={btnOutline}>Assign Inspection</Link>
-        </div>
+      <div>
+        <p className="text-lg text-muted-foreground">Welcome back,</p>
+        <h1 className="text-3xl font-bold text-gray-900">{firstName} 👋</h1>
       </div>
 
+      {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          { title: 'Farmers', icon: Users, value: farmersRes.count ?? 0, sub: 'Under agreement', color: 'text-gray-900' },
-          { title: 'Pending', icon: Clock, value: assignmentsRes.count ?? 0, sub: 'Inspections pending', color: 'text-amber-600' },
-          { title: 'Completed', icon: ClipboardCheck, value: '—', sub: 'This season', color: 'text-green-700' },
-          { title: 'Expected Yield', icon: TrendingUp, value: '—', sub: 'Quintals (est.)', color: 'text-gray-900' },
-        ].map(({ title, icon: Icon, value, sub, color }) => (
-          <Card key={title}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                <Icon className="h-4 w-4" /> {title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className={`text-3xl font-bold ${color}`}>{String(value)}</p>
-              <p className="text-xs text-gray-500 mt-1">{sub}</p>
+        {stats.map(({ title, icon: Icon, value, sub, bg, fg }) => (
+          <Card key={title} className="border-2">
+            <CardContent className="p-5">
+              <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl ${bg}`}>
+                <Icon className={`h-6 w-6 ${fg}`} />
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{String(value)}</p>
+              <p className="text-base font-medium text-gray-500">{title}</p>
+              <p className="text-sm text-muted-foreground">{sub}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle className="text-base">Quick Actions</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2">
-            {[
-              { label: 'Add Farmer', href: '/farmers/new', icon: Users },
-              { label: 'All Farmers', href: '/farmers', icon: Users },
-              { label: 'Assign Inspection', href: '/inspections/assign', icon: ClipboardCheck },
-              { label: 'Reports', href: '/reports/executive', icon: TrendingUp },
-            ].map(({ label, href, icon: Icon }) => (
-              <Link key={href} href={href} className={cn(btnOutline, 'justify-start gap-2 h-10')}>
-                <Icon className="h-4 w-4 text-green-700" />
-                <span className="text-sm">{label}</span>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" /> Attention Needed
-            </CardTitle>
-          </CardHeader>
-          <CardContent><p className="text-sm text-gray-500">No alerts at this time.</p></CardContent>
-        </Card>
+      {/* Quick actions */}
+      <div>
+        <h2 className="mb-3 text-xl font-semibold text-gray-900">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {quickActions.map(({ label, href, icon: Icon, primary }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`flex h-28 flex-col items-center justify-center gap-2 rounded-2xl border-2 text-center transition active:scale-[0.98] ${
+                primary
+                  ? 'border-brand-700 bg-brand-700 text-white shadow-lg shadow-brand-700/25 hover:bg-brand-800'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-brand-200 hover:bg-brand-50'
+              }`}
+            >
+              <Icon className={`h-8 w-8 ${primary ? 'text-white' : 'text-brand-600'}`} />
+              <span className="px-2 text-base font-semibold leading-tight">{label}</span>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   )

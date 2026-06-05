@@ -20,10 +20,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar role={profile?.role ?? 'viewer'} userName={profile?.full_name ?? ''} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 items-center justify-between border-b bg-white px-4 lg:px-6">
+        <header className="flex h-16 items-center justify-between border-b bg-white px-4 lg:px-6">
           <div className="flex items-center gap-2 lg:hidden">
             <MobileNav role={profile?.role ?? 'viewer'} />
-            <span className="font-semibold text-green-800">Kosco Seeds</span>
+            <span className="text-lg font-bold text-brand-800">Kosco Seeds</span>
           </div>
           <div className="hidden lg:block" />
           <SyncBadge />
