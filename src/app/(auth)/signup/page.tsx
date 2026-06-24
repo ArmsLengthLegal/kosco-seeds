@@ -11,39 +11,29 @@ const signupSchema = z.object({
   full_name: z.string().min(2, 'Enter your full name'),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  role: z.enum(['super_admin', 'admin', 'manager', 'inspector', 'viewer']),
 })
 
 type SignupForm = z.infer<typeof signupSchema>
-
-const ROLES = [
-  { value: 'super_admin', label: 'Owner / CEO', desc: 'Full access to everything' },
-  { value: 'admin', label: 'Admin / Manager', desc: 'Manage farmers, inspections, reports' },
-  { value: 'manager', label: 'Zone Manager', desc: 'Manage zone farmers and assign inspectors' },
-  { value: 'inspector', label: 'Field Inspector', desc: 'Conduct field inspections' },
-  { value: 'viewer', label: 'Viewer', desc: 'Read-only access to reports' },
-]
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [showPw, setShowPw] = useState(false)
   const [done, setDone] = useState(false)
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<SignupForm>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { role: 'admin' },
   })
-
-  const selectedRole = watch('role')
 
   const onSubmit = async (data: SignupForm) => {
     setError(null)
     const supabase = createClient()
+    // SECURITY: role is NOT sent from the client. New accounts are created as
+    // 'viewer' by the DB trigger; an administrator elevates roles afterwards.
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
-        data: { full_name: data.full_name, role: data.role },
+        data: { full_name: data.full_name },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
@@ -124,33 +114,10 @@ export default function SignupPage() {
                 {errors.password && <p className="text-base text-destructive">{errors.password.message}</p>}
               </div>
 
-              {/* Role */}
-              <div className="space-y-2">
-                <label className="text-base font-medium text-gray-700">My Role</label>
-                <div className="space-y-2">
-                  {ROLES.map(r => (
-                    <button
-                      key={r.value}
-                      type="button"
-                      onClick={() => setValue('role', r.value as SignupForm['role'])}
-                      className={`flex w-full items-center gap-4 rounded-xl border-2 px-4 py-3 text-left transition ${
-                        selectedRole === r.value
-                          ? 'border-brand-700 bg-brand-50'
-                          : 'border-input bg-white hover:border-gray-300'
-                      }`}
-                    >
-                      <div className={`h-5 w-5 shrink-0 rounded-full border-2 flex items-center justify-center ${
-                        selectedRole === r.value ? 'border-brand-700 bg-brand-700' : 'border-gray-300'
-                      }`}>
-                        {selectedRole === r.value && <div className="h-2 w-2 rounded-full bg-white" />}
-                      </div>
-                      <div>
-                        <p className="text-base font-semibold text-gray-900">{r.label}</p>
-                        <p className="text-sm text-muted-foreground">{r.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              {/* Role note — roles are assigned by an administrator, not self-selected */}
+              <div className="rounded-xl bg-brand-50 px-4 py-3 text-base text-brand-800">
+                New accounts start with <strong>view-only</strong> access. An administrator
+                will grant your role (inspector, manager, etc.) after you sign up.
               </div>
 
               {error && (

@@ -40,3 +40,6 @@ CREDENTIALS.md
 *.env.local
 .env
 github\ token.txt
+
+# Claude Code local settings (may contain keys from permission prompts)
+.claude/settings.local.json
